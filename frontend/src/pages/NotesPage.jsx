@@ -2,6 +2,7 @@ import { useEffect, useState, useRef } from "react";
 import axios from "axios";
 import NoteCard from "../components/NoteCard/NoteCard.jsx";
 import AddNoteForm from "../components/AddNoteForm.jsx";
+import SpecialNoteCard from "../components/NoteCard/SpecialNoteCard.jsx";
 
 const MIN_SIDEBAR_WIDTH = 350;
 const MAX_SIDEBAR_WIDTH = 600;
@@ -239,6 +240,7 @@ const NotesPage = () => {
             position: "relative",
           }}
         >
+          {/* <SpecialNoteCard /> */}
           {notes.map((note) => (
             <NoteCard key={note._id} note={note} onDelete={handleNoteDeleted} />
           ))}
