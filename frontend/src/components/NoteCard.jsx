@@ -1,7 +1,7 @@
 import { useRef, useEffect } from "react";
 import Trash from "../icons/Trash";
+
 const NoteCard = ({ note }) => {
-  //   console.log(JSON.parse(note.position));
   let position = JSON.parse(note.position);
   const colors = JSON.parse(note.colors);
   const body = JSON.parse(note.body);
@@ -12,10 +12,10 @@ const NoteCard = ({ note }) => {
 
   function autoGrow(textAreaRef) {
     const { current } = textAreaRef;
-    // console.log(current.scrollHeight);
-    current.style.height = "auto"; // Reset the height
-    current.style.height = current.scrollHeight + "px"; // Set the new height
+    current.style.height = "auto";
+    current.style.height = current.scrollHeight + "px";
   }
+  
   return (
     <div
       className="card"
