@@ -13,7 +13,26 @@ function adjustBrightness(hex, percent) {
   return "#" + (b | (g << 8) | (r << 16)).toString(16).padStart(6, "0");
 }
 
-const defaultColor = "#f9d423";
+// New utility to get complementary color
+function getComplementaryColor(hex) {
+  let num = parseInt(hex.replace("#", ""), 16);
+  let r = 255 - (num >> 16);
+  let g = 255 - ((num >> 8) & 0x00ff);
+  let b = 255 - (num & 0x0000ff);
+  return (
+    "#" +
+    ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1).toUpperCase()
+  );
+}
+
+const DEFAULT_COLORS = [
+  "#b0b6c1", // muted gray-blue
+  "#f9d423", // muted yellow
+  "#f38181", // muted coral
+  "#95e1d3", // muted teal
+  "#a8d8ea", // muted light blue
+];
+
 const NOTE_WIDTH = 210;
 const NOTE_HEIGHT = 110;
 const PADDING = 24;
@@ -21,7 +40,7 @@ const PADDING = 24;
 const AddNoteForm = ({ onNoteAdded, notes = [] }) => {
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
-  const [color, setColor] = useState(defaultColor);
+  const [color, setColor] = useState(DEFAULT_COLORS[0]);
 
   // Find a random non-overlapping position
   function getRandomPosition() {
@@ -64,10 +83,11 @@ const AddNoteForm = ({ onNoteAdded, notes = [] }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     const position = getRandomPosition();
+    const complementary = getComplementaryColor(color);
     const colors = {
       colorHeader: color,
       colorText: adjustBrightness(color, 60),
-      colorBody: "#23283b",
+      colorBody: complementary,
     };
     const newNote = {
       title,
@@ -82,7 +102,7 @@ const AddNoteForm = ({ onNoteAdded, notes = [] }) => {
       onNoteAdded(res.data);
       setTitle("");
       setBody("");
-      setColor(defaultColor);
+      setColor(DEFAULT_COLORS[0]);
     } catch (err) {
       alert("Error adding note");
     }
@@ -122,7 +142,7 @@ const AddNoteForm = ({ onNoteAdded, notes = [] }) => {
         background: "rgba(35,40,59,0.96)",
         borderRadius: 18,
         boxShadow: "0 4px 32px 0 rgba(20,20,40,0.18)",
-        padding: 24,
+        padding: 24,// Prevent text selection in the sidebar
       }}
     >
       <label style={labelStyle}>Title</label>
@@ -156,20 +176,29 @@ const AddNoteForm = ({ onNoteAdded, notes = [] }) => {
         }}
       >
         <label style={{ ...labelStyle, marginBottom: 0 }}>Color</label>
-        <input
-          type="color"
-          value={color}
-          onChange={(e) => setColor(e.target.value)}
-          style={{
-            width: 36,
-            height: 36,
-            border: "1px solid #353a4a",
-            borderRadius: "0%",
-            boxShadow: "0 1px 4px 0 rgba(60,60,120,0.08)",
-            cursor: "pointer",
-            background: "#23283b",
-          }}
-        />
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+          {DEFAULT_COLORS.map((c) => (
+            <button
+              key={c}
+              type="button"
+              onClick={() => setColor(c)}
+              style={{
+                width: 32,
+                height: 32,
+                borderRadius: "50%",
+                border:
+                  color === c ? "2px solid #5a6cff" : "1.5px solid #353a4a",
+                background: c,
+                cursor: "pointer",
+                outline: color === c ? "2px solid #5a6cff" : "none",
+                boxShadow: color === c ? "0 0 0 2px #bfc7e0" : "none",
+                transition: "border 0.2s, outline 0.2s",
+                marginBottom: 4,
+              }}
+              aria-label={`Select color ${c}`}
+            />
+          ))}
+        </div>
       </div>
       <button
         type="submit"

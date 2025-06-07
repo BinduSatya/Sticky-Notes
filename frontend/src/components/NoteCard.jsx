@@ -246,8 +246,8 @@ const NoteCard = ({ note, onDelete }) => {
         position: "absolute",
         cursor: dragging.current ? "grabbing" : "grab",
         userSelect: "none",
-        borderRadius: 8,
-        boxShadow: "0 4px 24px 0 rgba(60,60,120,0.13)",
+        borderRadius: 5,
+        boxShadow: "0 4px 24px 0 rgba(5, 5, 33, 0.13)",
         minWidth: MIN_WIDTH,
         minHeight: MIN_HEIGHT,
         overflow: "hidden",
@@ -319,9 +319,9 @@ const NoteCard = ({ note, onDelete }) => {
         style={{
           backgroundColor: colors.colorHeader,
           cursor: "grab",
-          borderRadius: "8px 8px 0 0",
+          borderRadius: "5px 5px 0 0",
           padding: "8px 12px",
-          color: colors.colorText,
+          color: colors.colorBody, // Title text color is body color
           fontWeight: "bold",
           fontSize: "1.1em",
           display: "flex",
@@ -336,12 +336,15 @@ const NoteCard = ({ note, onDelete }) => {
 
       <div
         className="card-body"
-        style={{ height: "calc(100% - 40px)", padding: "8px 12px" }}
+        style={{
+          height: "calc(100% - 40px)",
+          padding: "8px 12px",
+        }}
       >
         <textarea
           ref={textAreaRef}
           style={{
-            color: colors.colorText,
+            color: colors.colorHeader, // Body text color is header color
             width: "100%",
             height: "100%",
             resize: "none",
@@ -350,7 +353,7 @@ const NoteCard = ({ note, onDelete }) => {
             outline: "none",
             fontSize: "1em",
             wordBreak: "break-word",
-            overflow: "hidden",
+            overflow: "auto",
           }}
           value={body}
           onChange={(e) => {
