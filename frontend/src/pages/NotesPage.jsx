@@ -16,7 +16,7 @@ const NotesPage = () => {
 
   useEffect(() => {
     axios
-      .get("http://localhost:5000/api/notes")
+      .get("https://stickynotes-7etc.onrender.com/api/notes")
       .then((res) => setNotes(res.data))
       .catch((err) => console.error("Error fetching notes:", err));
   }, []);
@@ -50,7 +50,9 @@ const NotesPage = () => {
       setDeletedQueue((queue) => {
         const idx = queue.findIndex((item) => item.note._id === id);
         if (idx !== -1) {
-          axios.delete(`http://localhost:5000/api/notes/${id}`).catch(() => {});
+          axios
+            .delete(`https://stickynotes-7etc.onrender.com/api/notes/${id}`)
+            .catch(() => {});
           const newQueue = [...queue];
           newQueue.splice(idx, 1);
           return newQueue;
@@ -182,7 +184,14 @@ const NotesPage = () => {
               wordBreak: "break-word",
             }}
           >
-            <span style={{ fontSize: 14, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+            <span
+              style={{
+                fontSize: 14,
+                whiteSpace: "nowrap",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+              }}
+            >
               {deletedQueue.length === 1
                 ? "Note deleted"
                 : `${deletedQueue.length} notes deleted`}

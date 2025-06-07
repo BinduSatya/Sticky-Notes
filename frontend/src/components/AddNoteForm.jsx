@@ -98,7 +98,10 @@ const AddNoteForm = ({ onNoteAdded, notes = [] }) => {
       height: NOTE_HEIGHT,
     };
     try {
-      const res = await axios.post("http://localhost:5000/api/notes", newNote);
+      const res = await axios.post(
+        "https://stickynotes-7etc.onrender.com/api/notes",
+        newNote
+      );
       onNoteAdded(res.data);
       setTitle("");
       setBody("");
@@ -142,7 +145,7 @@ const AddNoteForm = ({ onNoteAdded, notes = [] }) => {
         background: "rgba(35,40,59,0.96)",
         borderRadius: 18,
         boxShadow: "0 4px 32px 0 rgba(20,20,40,0.18)",
-        padding: 24,// Prevent text selection in the sidebar
+        padding: 24, // Prevent text selection in the sidebar
       }}
     >
       <label style={labelStyle}>Title</label>
