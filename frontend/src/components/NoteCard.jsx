@@ -1,46 +1,31 @@
 import { useRef, useEffect, useState } from "react";
 import axios from "axios";
-import Trash from "../icons/Trash";
+import Trash from "../icons/Trash.jsx";
+import { DEFAULT_COLORS, getComplementaryColor } from "../../utils/color";
+import { resizeHandleStyle } from "./NoteCard.styles";
+import { autoGrow } from "./NoteCard.utils";
 
 const MIN_WIDTH = 210;
 const MIN_HEIGHT = 110;
-const DEFAULT_COLORS = [
-  "#b0b6c1", // muted gray-blue
-  "#f9d423", // muted yellow
-  "#f38181", // muted coral
-  "#95e1d3", // muted teal
-  "#a8d8ea", // muted light blue
-];
-
-// Utility to get complementary color
-function getComplementaryColor(hex) {
-  let num = parseInt(hex.replace("#", ""), 16);
-  let r = 255 - (num >> 16);
-  let g = 255 - ((num >> 8) & 0x00ff);
-  let b = 255 - (num & 0x0000ff);
-  return (
-    "#" +
-    ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1).toUpperCase()
-  );
-}
 
 const NoteCard = ({ note, onDelete }) => {
   const {
     position: initialPosition,
     colors: initialColors,
     body: initialBody,
-    title,
+    title: initialTitle,
   } = note;
   const textAreaRef = useRef(null);
 
   const [position, setPosition] = useState(initialPosition);
   const [body, setBody] = useState(initialBody);
+  const [title, setTitle] = useState(initialTitle);
   const [size, setSize] = useState({
     width: note.width || MIN_WIDTH,
     height: note.height || MIN_HEIGHT,
   });
   const [colors, setColors] = useState(initialColors);
-  const [pickerOpen, setPickerOpen] = useState(false);
+  const [hovered, setHovered] = useState(false);
 
   const resizing = useRef(null);
   const cardRef = useRef(null);
@@ -59,28 +44,36 @@ const NoteCard = ({ note, onDelete }) => {
     setBody(initialBody);
   }, [initialBody]);
 
-  function autoGrow(textAreaRef) {
-    const { current } = textAreaRef;
-    if (!current) return;
-    current.style.height = "auto";
-    current.style.height = current.scrollHeight + "px";
-  }
+  useEffect(() => {
+    setTitle(initialTitle);
+  }, [initialTitle]);
 
-  // Delete handler
-  const handleDelete = async () => {
+  // Editable header blur handler
+  const handleHeaderBlur = async () => {
     try {
-      await axios.delete(
-        `https://stickynotes-7etc.onrender.com/api/notes/${note._id}`
-      );
-      if (onDelete) onDelete(note._id);
+      await axios.patch(`http://localhost:5000/api/notes/${note._id}`, {
+        title,
+      });
     } catch (err) {
-      alert("Error deleting note");
+      alert("Error updating note title");
+    }
+  };
+
+  // Body blur handler
+  const handleBodyBlur = async () => {
+    try {
+      await axios.patch(`http://localhost:5000/api/notes/${note._id}`, {
+        body,
+      });
+    } catch (err) {
+      alert("Error updating note body");
     }
   };
 
   // Drag handlers
   const handleMouseDown = (e) => {
     if (e.target.dataset.resize) return;
+    if (!e.shiftKey) return; // Only allow drag with Shift
     dragging.current = true;
     const cardRect = cardRef.current.getBoundingClientRect();
     const sidebar = document.querySelector('[style*="position: fixed"]');
@@ -131,6 +124,8 @@ const NoteCard = ({ note, onDelete }) => {
 
       // Handle east (right)
       if (dir.includes("e")) {
+        console.log("Resizing east");
+
         newWidth = Math.max(
           MIN_WIDTH,
           Math.min(startW + dx, workareaRect.right - startLeft)
@@ -138,6 +133,7 @@ const NoteCard = ({ note, onDelete }) => {
       }
       // Handle south (bottom)
       if (dir.includes("s")) {
+        console.log("Resizing south");
         newHeight = Math.max(
           MIN_HEIGHT,
           Math.min(startH + dy, workareaRect.bottom - startTop)
@@ -145,7 +141,10 @@ const NoteCard = ({ note, onDelete }) => {
       }
       // Handle west (left)
       if (dir.includes("w")) {
+        console.log("Resizing west");
+        // The right edge stays at startLeft + startW
         let proposedLeft = startLeft + dx;
+        // Clamp so right edge doesn't go past workarea's right, and left doesn't go past workarea's left
         proposedLeft = Math.max(
           0,
           Math.min(proposedLeft, startLeft + startW - MIN_WIDTH)
@@ -155,9 +154,12 @@ const NoteCard = ({ note, onDelete }) => {
       }
       // Handle north (top)
       if (dir.includes("n")) {
+        console.log("Resizing north");
+
         const maxDy = startH - MIN_HEIGHT;
-        dy = Math.min(dy, maxDy);
+        dy = Math.min(dy, maxDy); // Don't allow shrinking past min height
         let proposedTop = startTop + dy;
+        // Clamp so bottom edge doesn't go past workarea
         proposedTop = Math.max(
           workareaRect.top,
           Math.min(proposedTop, workareaRect.bottom - MIN_HEIGHT)
@@ -166,6 +168,7 @@ const NoteCard = ({ note, onDelete }) => {
         newTop = proposedTop - workareaRect.top;
       }
 
+      // Clamp newLeft and newTop to not go outside workarea
       newLeft = Math.max(0, Math.min(newLeft, workareaRect.width - newWidth));
       newTop = Math.max(0, Math.min(newTop, workareaRect.height - newHeight));
 
@@ -200,47 +203,29 @@ const NoteCard = ({ note, onDelete }) => {
   const handleMouseUp = async () => {
     dragging.current = false;
     if (resizing.current) {
+      // Save new size and position
       try {
-        await axios.patch(
-          `https://stickynotes-7etc.onrender.com/api/notes/${note._id}`,
-          {
-            position,
-            width: size.width,
-            height: size.height,
-          }
-        );
+        await axios.patch(`http://localhost:5000/api/notes/${note._id}`, {
+          position,
+          width: size.width,
+          height: size.height,
+        });
       } catch (err) {
         console.error("Error updating note size/position:", err);
       }
       resizing.current = null;
     } else {
+      // Save position only
       try {
-        await axios.patch(
-          `https://stickynotes-7etc.onrender.com/api/notes/${note._id}`,
-          {
-            position,
-          }
-        );
+        await axios.patch(`http://localhost:5000/api/notes/${note._id}`, {
+          position,
+        });
       } catch (err) {
         console.error("Error updating note position:", err);
       }
     }
     document.removeEventListener("mousemove", handleMouseMove);
     document.removeEventListener("mouseup", handleMouseUp);
-  };
-
-  // Update body in backend on blur
-  const handleBodyBlur = async () => {
-    try {
-      await axios.patch(
-        `https://stickynotes-7etc.onrender.com/api/notes/${note._id}`,
-        {
-          body,
-        }
-      );
-    } catch (err) {
-      console.error("Error updating note body:", err);
-    }
   };
 
   // Color change handler
@@ -251,60 +236,69 @@ const NoteCard = ({ note, onDelete }) => {
     };
     setColors(newColors);
     try {
-      await axios.patch(
-        `https://stickynotes-7etc.onrender.com/api/notes/${note._id}`,
-        {
-          colors: newColors,
-        }
-      );
+      await axios.patch(`http://localhost:5000/api/notes/${note._id}`, {
+        colors: newColors,
+      });
     } catch (err) {
       alert("Error updating note color");
     }
-    setPickerOpen(false);
   };
 
-  // Resize handles for all corners and sides
-  const handleStyle = (cursor, style) => ({
-    position: "absolute",
-    visibility: "none",
-    zIndex: 10,
-    opacity: 0.4,
-    width: 12,
-    height: 12,
-    background: "rgba(255,255,255,0.07)",
-    borderRadius: 4,
-    border: "0.5px dotted #aaa",
-    cursor,
-    ...style,
-  });
+  // Toggle color on ctrl+click
+  const handleCardClick = async (e) => {
+    if (e.ctrlKey) {
+      // Find the next color in DEFAULT_COLORS
+      const currentIdx = DEFAULT_COLORS.indexOf(colors.colorHeader);
+      const nextIdx = (currentIdx + 1) % DEFAULT_COLORS.length;
+      const nextColor = DEFAULT_COLORS[nextIdx];
+      const newColors = {
+        colorHeader: nextColor,
+        colorBody: getComplementaryColor(nextColor),
+      };
+      setColors(newColors);
+      try {
+        await axios.patch(`http://localhost:5000/api/notes/${note._id}`, {
+          colors: newColors,
+        });
+      } catch (err) {
+        alert("Error updating note color");
+      }
+    }
+  };
 
   return (
     <div
       ref={cardRef}
       className="card"
       style={{
-        backgroundColor: colors.colorBody,
+        backgroundColor: hovered ? `${colors.colorBody}CC` : colors.colorBody,
         left: `${position.x}px`,
         top: `${position.y}px`,
-        width: size.width,
-        height: size.height,
+        width: hovered ? size.width * 1.02 : size.width,
+        height: hovered ? size.height * 1.02 : size.height,
         position: "absolute",
-        cursor: dragging.current ? "grabbing" : "grab",
+        cursor: dragging.current ? "grabbing" : "default", // normal cursor when not dragging
         userSelect: "none",
         borderRadius: 5,
-        boxShadow: "0 4px 24px 0 rgba(5, 5, 33, 0.13)",
+        boxShadow: hovered
+          ? "0 8px 32px 0 rgba(5, 5, 33, 0.18)"
+          : "0 4px 24px 0 rgba(5, 5, 33, 0.13)",
         minWidth: MIN_WIDTH,
         minHeight: MIN_HEIGHT,
         overflow: "hidden",
-        transition: "box-shadow 0.2s",
+        transition:
+          "box-shadow 0.2s, background-color 0.2s, width 0.15s, height 0.15s",
+        zIndex: hovered ? 2 : 1,
       }}
       onMouseDown={handleMouseDown}
+      onClick={handleCardClick}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
     >
       <div
         className="card-header"
         style={{
           backgroundColor: colors.colorHeader,
-          cursor: "grab",
           borderRadius: "5px 5px 0 0",
           padding: "8px 12px",
           color: colors.colorBody,
@@ -318,80 +312,26 @@ const NoteCard = ({ note, onDelete }) => {
       >
         <span style={{ display: "flex", alignItems: "center" }}>
           <Trash handleDelete={handleDelete} style={{ cursor: "pointer" }} />
-          <span style={{ marginLeft: 8 }}>{title}</span>
-        </span>
-        {/* Color Picker Toggle Button at Top Right */}
-        <button
-          type="button"
-          onClick={(e) => {
-            e.stopPropagation();
-            setPickerOpen((open) => !open);
-          }}
-          style={{
-            background: "#fff",
-            border: "1px solid #bfc7e0",
-            borderRadius: "50%",
-            width: 28,
-            height: 28,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            boxShadow: "0 1px 4px 0 rgba(20,20,40,0.10)",
-            cursor: "pointer",
-            fontWeight: 700,
-            fontSize: 18,
-            color: "#5a6cff",
-            marginLeft: 8,
-            zIndex: 3,
-          }}
-          aria-label="Change note color"
-        >
-          🎨
-        </button>
-        {/* Color Picker Panel (shown only if pickerOpen) */}
-        {pickerOpen && (
-          <div
+          <input
+            type="text"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            onBlur={handleHeaderBlur}
             style={{
-              position: "absolute",
-              top: -48,
-              right: 0,
-              left: "auto",
-              background: "#fff",
-              border: "1px solid #bfc7e0",
-              borderRadius: 8,
-              boxShadow: "0 2px 12px 0 rgba(20,20,40,0.18)",
-              padding: "8px 12px",
-              display: "flex",
-              gap: 8,
-              zIndex: 10,
+              marginLeft: 8,
+              background: "transparent",
+              border: "none",
+              color: colors.colorBody,
+              fontWeight: "bold",
+              fontSize: "1.1em",
+              outline: "none",
+              width: "100%",
+              minWidth: 0,
+              flex: 1,
             }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            {DEFAULT_COLORS.map((c) => (
-              <button
-                key={c}
-                type="button"
-                onClick={() => handleColorChange(c)}
-                style={{
-                  width: 24,
-                  height: 24,
-                  borderRadius: "50%",
-                  border:
-                    colors.colorHeader === c
-                      ? "2px solid #5a6cff"
-                      : "1px solid #353a4a",
-                  background: c,
-                  cursor: "pointer",
-                  outline: "none",
-                  boxShadow:
-                    colors.colorHeader === c ? "0 0 0 2px #bfc7e0" : "none",
-                  marginBottom: 0,
-                }}
-                aria-label={`Change note color to ${c}`}
-              />
-            ))}
-          </div>
-        )}
+            spellCheck={false}
+          />
+        </span>
       </div>
 
       <div
@@ -423,6 +363,64 @@ const NoteCard = ({ note, onDelete }) => {
           onBlur={handleBodyBlur}
         />
       </div>
+
+      {/* Resize handles */}
+      <div
+        style={resizeHandleStyle("nwse-resize", { top: -6, left: -6 })}
+        onMouseDown={handleResizeMouseDown("nw")}
+        data-resize
+      />
+      <div
+        style={resizeHandleStyle("nesw-resize", { top: -6, right: -6 })}
+        onMouseDown={handleResizeMouseDown("ne")}
+        data-resize
+      />
+      <div
+        style={resizeHandleStyle("nwse-resize", { bottom: -6, right: -6 })}
+        onMouseDown={handleResizeMouseDown("se")}
+        data-resize
+      />
+      <div
+        style={resizeHandleStyle("nesw-resize", { bottom: -6, left: -6 })}
+        onMouseDown={handleResizeMouseDown("sw")}
+        data-resize
+      />
+      <div
+        style={resizeHandleStyle("ns-resize", {
+          top: -6,
+          left: "50%",
+          transform: "translateX(-50%)",
+        })}
+        onMouseDown={handleResizeMouseDown("n")}
+        data-resize
+      />
+      <div
+        style={resizeHandleStyle("ew-resize", {
+          top: "50%",
+          right: -6,
+          transform: "translateY(-50%)",
+        })}
+        onMouseDown={handleResizeMouseDown("e")}
+        data-resize
+      />
+      <div
+        style={resizeHandleStyle("ns-resize", {
+          bottom: -6,
+          left: "50%",
+          transform: "translateX(-50%)",
+        })}
+        onMouseDown={handleResizeMouseDown("s")}
+        data-resize
+      />
+      <div
+        style={resizeHandleStyle("ew-resize", {
+          top: "50%",
+          left: -6,
+          transform: "translateY(-50%)",
+        })}
+        onMouseDown={handleResizeMouseDown("w")}
+        data-resize
+      />
     </div>
   );
 };
