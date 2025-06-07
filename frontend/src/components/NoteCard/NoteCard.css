@@ -1,0 +1,37 @@
+.note-card {
+  border-radius: 5px;
+  box-shadow: 0 4px 24px 0 rgba(5, 5, 33, 0.13);
+  min-width: 210px;
+  min-height: 110px;
+  overflow: hidden;
+  transition: box-shadow 0.2s, background-color 0.2s, width 0.15s, height 0.15s;
+  position: absolute;
+  user-select: none;
+  z-index: 1;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.note-card textarea {
+  width: 100%;
+  height: 100%;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-size: 1em;
+  resize: none;
+  overflow: hidden;
+  color: inherit;
+  padding: 8px 12px;
+  flex: 1;
+}
+
+.note-card-footer {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  padding: 4px 8px;
+  background: transparent;
+  border-top: none;
+}

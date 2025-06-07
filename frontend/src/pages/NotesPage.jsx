@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from "react";
 import axios from "axios";
-import NoteCard from "../components/NoteCard.jsx";
+import NoteCard from "../components/NoteCard/NoteCard.jsx";
 import AddNoteForm from "../components/AddNoteForm.jsx";
 
 const MIN_SIDEBAR_WIDTH = 350;
@@ -48,7 +48,7 @@ const NotesPage = () => {
     // Set up a timeout for this note to delete from backend after 4 seconds
     const timeoutId = setTimeout(async () => {
       setDeletedQueue((queue) => {
-        const idx = queue.findIndex((item) => item.note._id === id);
+        const idx = queue.findIndex((item) => item?.note?._id === id);
         if (idx !== -1) {
           axios
             .delete(`https://stickynotes-7etc.onrender.com/api/notes/${id}`)
