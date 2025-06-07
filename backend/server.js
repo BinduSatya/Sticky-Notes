@@ -6,19 +6,20 @@ require("dotenv").config();
 const app = express();
 app.use(cors());
 app.use(express.json());
+
 // MongoDB connection
 mongoose
   .connect(process.env.MONGO_URI)
   .then(() => console.log("MongoDB connected"))
   .catch((err) => console.log(err));
 
-// Note schema
 const noteSchema = new mongoose.Schema({
+  title: { type: String, required: true }, // <-- Add this line
   body: String,
   colors: Object,
   position: Object,
-  width: Number,   // <-- add this
-  height: Number,  // <-- add this
+  width: Number,
+  height: Number,
 });
 
 const Note = mongoose.model("Note", noteSchema);

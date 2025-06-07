@@ -14,7 +14,10 @@ const NotesPage = () => {
   useEffect(() => {
     axios
       .get("http://localhost:5000/api/notes")
-      .then((res) => setNotes(res.data))
+      .then((res) => {
+        setNotes(res.data);
+        console.log(res.data);
+      })
       .catch((err) => console.error("Error fetching notes:", err));
   }, []);
 
@@ -77,10 +80,9 @@ const NotesPage = () => {
       >
         <h2
           style={{
-            marginTop: 0,
-            marginBottom: 16,
+            marginTop: -10,
+            marginBottom: -5,
             fontWeight: 700,
-            letterSpacing: 1,
             color: "#e0e6f7",
           }}
         >
@@ -111,16 +113,15 @@ const NotesPage = () => {
           marginLeft: sidebarWidth,
           position: "relative",
           height: "100vh",
-          overflowY: "auto",
-          overflowX: "hidden",
+          overflow: "hidden", // No vertical or horizontal scroll
           background:
             "repeating-linear-gradient(0deg, #23283b, #23283b 39px, #181c24 40px, #23283b 41px)",
         }}
       >
         <div
           style={{
-            minHeight: "200vh",
             width: "100%",
+            height: "100%", // Fill the visible area only
             position: "relative",
           }}
         >

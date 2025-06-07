@@ -87,10 +87,10 @@ const NoteCard = ({ note, onDelete }) => {
     document.addEventListener("mousemove", handleMouseMove);
     document.addEventListener("mouseup", handleMouseUp);
   };
-
   const handleMouseMove = (e) => {
     if (resizing.current) {
-      const { dir, startX, startY, startW, startH, startLeft, startTop } = resizing.current;
+      const { dir, startX, startY, startW, startH, startLeft, startTop } =
+        resizing.current;
       let dx = e.clientX - startX;
       let dy = e.clientY - startY;
       let newWidth = startW;
@@ -98,20 +98,64 @@ const NoteCard = ({ note, onDelete }) => {
       let newLeft = startLeft;
       let newTop = startTop;
 
-      if (dir.includes("e")) newWidth = Math.max(MIN_WIDTH, startW + dx);
-      if (dir.includes("s")) newHeight = Math.max(MIN_HEIGHT, startH + dy);
+      const workarea = document.querySelector(".workarea-bg");
+      const workareaRect = workarea.getBoundingClientRect();
+
+      // Handle east (right)
+      if (dir.includes("e")) {
+        console.log("Resizing east");
+
+        newWidth = Math.max(
+          MIN_WIDTH,
+          Math.min(startW + dx, workareaRect.right - startLeft)
+        );
+      }
+      // Handle south (bottom)
+      if (dir.includes("s")) {
+        console.log("Resizing south");
+        newHeight = Math.max(
+          MIN_HEIGHT,
+          Math.min(startH + dy, workareaRect.bottom - startTop)
+        );
+      }
+      // Handle west (left)
       if (dir.includes("w")) {
-        newWidth = Math.max(MIN_WIDTH, startW - dx);
-        newLeft = startLeft + dx;
+        console.log("Resizing west");
+        // The right edge stays at startLeft + startW
+        let proposedLeft = startLeft + dx;
+        // Clamp so right edge doesn't go past workarea's right, and left doesn't go past workarea's left
+        proposedLeft = Math.max(
+          0,
+          Math.min(proposedLeft, startLeft + startW - MIN_WIDTH)
+        );
+        newWidth = startLeft + startW - proposedLeft;
+        newLeft = proposedLeft;
       }
+      // Handle north (top)
       if (dir.includes("n")) {
-        newHeight = Math.max(MIN_HEIGHT, startH - dy);
-        newTop = startTop + dy;
+        console.log("Resizing north");
+
+        const maxDy = startH - MIN_HEIGHT;
+        dy = Math.min(dy, maxDy); // Don't allow shrinking past min height
+        let proposedTop = startTop + dy;
+        // Clamp so bottom edge doesn't go past workarea
+        proposedTop = Math.max(
+          workareaRect.top,
+          Math.min(proposedTop, workareaRect.bottom - MIN_HEIGHT)
+        );
+        newHeight = Math.max(MIN_HEIGHT, startH - (proposedTop - startTop));
+        newTop = proposedTop - workareaRect.top;
       }
+
+      // Clamp newLeft and newTop to not go outside workarea
+      newLeft = Math.max(0, Math.min(newLeft, workareaRect.width - newWidth));
+      newTop = Math.max(0, Math.min(newTop, workareaRect.height - newHeight));
+
       setSize({ width: newWidth, height: newHeight });
       setPosition({ x: newLeft, y: newTop });
       return;
     }
+
     if (!dragging.current) return;
     const sidebarWidth = offset.current.sidebarWidth || 0;
     const workarea = document.querySelector(".workarea-bg");
@@ -177,12 +221,14 @@ const NoteCard = ({ note, onDelete }) => {
   // Resize handles for all corners and sides
   const handleStyle = (cursor, style) => ({
     position: "absolute",
+    visibility: "none",
     zIndex: 10,
+    opacity: 0.4,
     width: 12,
     height: 12,
     background: "rgba(255,255,255,0.07)",
     borderRadius: 4,
-    border: "1.5px solid #aaa",
+    border: "0.5px dotted #aaa",
     cursor,
     ...style,
   });
@@ -210,15 +256,63 @@ const NoteCard = ({ note, onDelete }) => {
       onMouseDown={handleMouseDown}
     >
       {/* Resize handles: corners */}
-      <div data-resize onMouseDown={handleResizeMouseDown("nw")} style={handleStyle("nwse-resize", { left: -6, top: -6 })} />
-      <div data-resize onMouseDown={handleResizeMouseDown("ne")} style={handleStyle("nesw-resize", { right: -6, top: -6 })} />
-      <div data-resize onMouseDown={handleResizeMouseDown("sw")} style={handleStyle("nesw-resize", { left: -6, bottom: -6 })} />
-      <div data-resize onMouseDown={handleResizeMouseDown("se")} style={handleStyle("nwse-resize", { right: -6, bottom: -6 })} />
+      <div
+        data-resize
+        onMouseDown={handleResizeMouseDown("nw")}
+        style={handleStyle("nwse-resize", { left: -6, top: -6 })}
+      />
+      <div
+        data-resize
+        onMouseDown={handleResizeMouseDown("ne")}
+        style={handleStyle("nesw-resize", { right: -6, top: -6 })}
+      />
+      <div
+        data-resize
+        onMouseDown={handleResizeMouseDown("sw")}
+        style={handleStyle("nesw-resize", { left: -6, bottom: -6 })}
+      />
+      <div
+        data-resize
+        onMouseDown={handleResizeMouseDown("se")}
+        style={handleStyle("nwse-resize", { right: -6, bottom: -6 })}
+      />
       {/* Resize handles: sides */}
-      <div data-resize onMouseDown={handleResizeMouseDown("n")} style={handleStyle("ns-resize", { left: "50%", top: -6, transform: "translateX(-50%)" })} />
-      <div data-resize onMouseDown={handleResizeMouseDown("s")} style={handleStyle("ns-resize", { left: "50%", bottom: -6, transform: "translateX(-50%)" })} />
-      <div data-resize onMouseDown={handleResizeMouseDown("w")} style={handleStyle("ew-resize", { left: -6, top: "50%", transform: "translateY(-50%)" })} />
-      <div data-resize onMouseDown={handleResizeMouseDown("e")} style={handleStyle("ew-resize", { right: -6, top: "50%", transform: "translateY(-50%)" })} />
+      <div
+        data-resize
+        onMouseDown={handleResizeMouseDown("n")}
+        style={handleStyle("ns-resize", {
+          left: "50%",
+          top: -6,
+          transform: "translateX(-50%)",
+        })}
+      />
+      <div
+        data-resize
+        onMouseDown={handleResizeMouseDown("s")}
+        style={handleStyle("ns-resize", {
+          left: "50%",
+          bottom: -6,
+          transform: "translateX(-50%)",
+        })}
+      />
+      <div
+        data-resize
+        onMouseDown={handleResizeMouseDown("w")}
+        style={handleStyle("ew-resize", {
+          left: -6,
+          top: "50%",
+          transform: "translateY(-50%)",
+        })}
+      />
+      <div
+        data-resize
+        onMouseDown={handleResizeMouseDown("e")}
+        style={handleStyle("ew-resize", {
+          right: -6,
+          top: "50%",
+          transform: "translateY(-50%)",
+        })}
+      />
 
       <div
         className="card-header"
@@ -234,11 +328,16 @@ const NoteCard = ({ note, onDelete }) => {
           alignItems: "center",
         }}
       >
-        <Trash handleDelete={handleDelete} style={{ cursor: "pointer" }} />
-        <span style={{ marginLeft: 8 }}>{title}</span>
+        <span style={{ marginLeft: 8 }}>
+          <Trash handleDelete={handleDelete} style={{ cursor: "pointer" }} />
+          {title}
+        </span>
       </div>
 
-      <div className="card-body" style={{ height: "calc(100% - 40px)", padding: "8px 12px" }}>
+      <div
+        className="card-body"
+        style={{ height: "calc(100% - 40px)", padding: "8px 12px" }}
+      >
         <textarea
           ref={textAreaRef}
           style={{
