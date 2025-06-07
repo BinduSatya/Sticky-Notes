@@ -17,6 +17,8 @@ const noteSchema = new mongoose.Schema({
   body: String,
   colors: Object,
   position: Object,
+  width: Number,   // <-- add this
+  height: Number,  // <-- add this
 });
 
 const Note = mongoose.model("Note", noteSchema);
@@ -36,6 +38,17 @@ app.post("/api/notes", async (req, res) => {
 app.delete("/api/notes/:id", async (req, res) => {
   await Note.findByIdAndDelete(req.params.id);
   res.json({ success: true });
+});
+
+app.patch("/api/notes/:id", async (req, res) => {
+  try {
+    const updatedNote = await Note.findByIdAndUpdate(req.params.id, req.body, {
+      new: true,
+    });
+    res.json(updatedNote);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to update note" });
+  }
 });
 
 const PORT = process.env.PORT || 5000;

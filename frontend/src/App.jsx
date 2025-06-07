@@ -2,7 +2,7 @@ import NotesPage from "./pages/NotesPage.jsx";
 
 function App() {
   return (
-    <div id="app">
+    <div style={{ display: "flex", height: "100vh" }}>
       <NotesPage />
     </div>
   );
