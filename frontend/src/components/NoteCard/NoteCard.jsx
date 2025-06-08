@@ -63,9 +63,10 @@ const NoteCard = ({ note, onDelete }) => {
   // Body blur handler
   const handleBodyBlur = async () => {
     try {
-      await axios.patch(`http://localhost:5000/api/notes/${note._id}`, {
-        body,
-      });
+      await axios.patch(
+        `https://stickynotes-7etc.onrender.com/api/notes/${note._id}`,
+        { body }
+      );
     } catch (err) {
       alert("Error updating note body");
     }
