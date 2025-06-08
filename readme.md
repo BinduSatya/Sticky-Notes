@@ -13,6 +13,17 @@ Sticky-Notes/
   readme.md     # This file (overall project)
 ```
 
+## ⌨️ Keyboard Shortcuts
+
+- **Shift + Mouse Drag:**  
+  Hold the **Shift** key and drag a note to move it.  
+  (Dragging is only enabled while Shift is held.)
+
+- **Ctrl + Click:**  
+  Hold the **Ctrl** key and click on a note to cycle its color through the available palette.
+
+
+
 ## 🚀 Quick Start
 
 1. **Start the backend:**  
