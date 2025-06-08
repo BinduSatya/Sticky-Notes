@@ -2,6 +2,8 @@
 
 A modern sticky notes application built with the MERN stack (MongoDB, Express, React, Node.js).
 
+**Project Link**: https://stickynotes-todo.onrender.com/
+
 ## 📁 Project Structure
 
 ```
