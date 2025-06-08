@@ -52,9 +52,12 @@ const NoteCard = ({ note, onDelete }) => {
   // Editable header blur handler
   const handleHeaderBlur = async () => {
     try {
-      await axios.patch(`http://localhost:5000/api/notes/${note._id}`, {
-        title,
-      });
+      await axios.patch(
+        `https://stickynotes-7etc.onrender.com/api/notes/${note._id}`,
+        {
+          title,
+        }
+      );
     } catch (err) {
       alert("Error updating note title");
     }
