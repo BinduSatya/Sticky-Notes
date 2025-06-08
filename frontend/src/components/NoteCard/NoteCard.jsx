@@ -237,9 +237,12 @@ const NoteCard = ({ note, onDelete }) => {
     };
     setColors(newColors);
     try {
-      await axios.patch(`http://localhost:5000/api/notes/${note._id}`, {
-        colors: newColors,
-      });
+      await axios.patch(
+        `https://stickynotes-7etc.onrender.com/api/notes/${note._id}`,
+        {
+          colors: newColors,
+        }
+      );
     } catch (err) {
       alert("Error updating note color");
     }
@@ -258,9 +261,12 @@ const NoteCard = ({ note, onDelete }) => {
       };
       setColors(newColors);
       try {
-        await axios.patch(`http://localhost:5000/api/notes/${note._id}`, {
-          colors: newColors,
-        });
+        await axios.patch(
+          `https://stickynotes-7etc.onrender.com/api/notes/${note._id}`,
+          {
+            colors: newColors,
+          }
+        );
       } catch (err) {
         alert("Error updating note color");
       }
