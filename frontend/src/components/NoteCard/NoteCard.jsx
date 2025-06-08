@@ -322,7 +322,10 @@ const NoteCard = ({ note, onDelete }) => {
         }}
       >
         <span style={{ display: "flex", alignItems: "center" }}>
-          <Trash handleDelete={handleDelete} style={{ cursor: "pointer" }} />
+          <Trash
+            handleDelete={() => onDelete(note._id)}
+            style={{ cursor: "pointer" }}
+          />
           <input
             type="text"
             value={title}

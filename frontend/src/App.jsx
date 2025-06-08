@@ -1,8 +1,9 @@
 import NotesPage from "./pages/NotesPage.jsx";
+import "./App.css"; // Import the CSS for responsive styles
 
 function App() {
   return (
-    <div style={{ display: "flex", height: "100vh" }}>
+    <div className="app-root">
       <NotesPage />
     </div>
   );
