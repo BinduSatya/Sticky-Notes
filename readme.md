@@ -1,9 +1,7 @@
 # Sticky Notes - Documentation
 
 A full-stack MERN sticky notes app with a modern React frontend and Express/MongoDB backend.  
-This README documents the **project structure**, **components**, **utility functions**, and **key design/feature decisions**.
 
----
 
 ## 📁 Folder Structure
 
@@ -227,14 +225,4 @@ Sticky-Notes/
      ```
 
 ---
-
-## 📚 Further Improvements
-
-- Add authentication for personal notes.
-- Add markdown support for note body.
-- Add tags or categories.
-- Add multi-user collaboration.
-
----
-
 **This documentation is up to date with all recent code and structure changes.**
